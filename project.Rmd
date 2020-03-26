@@ -1,0 +1,80 @@
+---
+title: "STATS 503 Project"
+output: html_notebook
+---
+
+# Exploratory data analysis
+```{r}
+library(ggplot2)
+library(plotly)
+library(reshape2)
+
+# First let's look at the data summary
+df = read.csv(file='data.csv')
+print(head(df, 10))
+summary(df)
+
+# We may be interested in predicting the last feature -> Revenue
+#data$Revenue = factor(data$Revenue)
+```
+Looking at the data summary, there are 10 numerical and 8 categorical attributes. Assuming that the `Revenue` variable is the class of interest:
+
+Continuous variables:
+  * Administrative
+  * Administrative duration
+  * Informational
+  * Informational duration
+  * Product Related
+  * Product Related duration
+  * Bounce rate
+  * Exit rate
+  * Page value
+  * Special day
+  
+Categorical variables (7 -> not including the target (Revenue)):
+  * Operating system
+  * Browser
+  * Region
+  * Traffic type
+  * Visitor type
+  * Month
+  * Weekend
+
+```{r}
+# Create boxplots with respect to revenue as our variable of interest and each continuous variable
+#df = melt(data, id.var="Revenue")
+#p = ggplot(df, aes(x=variable, y=value)) + 
+#             geom_boxplot()# + 
+             #geom_jitter()
+#ggplotly(p)
+#p
+```
+```{r}
+# Silly toy plot
+ggplot(data=df, aes(x=Revenue, fill=Revenue)) +
+  geom_bar()
+
+# Revenue versus bounce rate
+ggplot(data=df, aes(x=Revenue, y=BounceRates, fill=Revenue)) +
+  geom_bar(stat="identity")
+```
+
+```{r fig.width=100%, fig.height=100%}
+# Create barplots for all variables now
+df2 = melt(df, id.var="Revenue")
+print(df2)
+p = ggplot(data=df2, aes(x=Revenue, y=value, fill=Revenue, label=variable)) + 
+    geom_bar(stat="identity") +
+    facet_grid(. ~ variable, 
+               scales="free_x", space="free_x", 
+               margins=TRUE,   as.table=TRUE) + 
+    scale_fill_viridis_d() +
+    theme(axis.text.x=element_text(angle=90, hjust=1), 
+          axis.text.y=element_blank()) + 
+    labs(title="Distribution of each variable's contribution to Revenue",
+         y="")
+p
+#ggplotly(p)
+
+```
+
