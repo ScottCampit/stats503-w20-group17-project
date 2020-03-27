@@ -1,0 +1,6 @@
+# Directories to ignore
+app
+db
+Dockerfile
+Procfile
+
