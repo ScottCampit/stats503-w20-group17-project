@@ -19,6 +19,10 @@ online$Month = factor(online$Month)
 online$VisitorType = factor(online$VisitorType)
 online$Weekend = factor(online$Weekend)
 online$Revenue = factor(online$Revenue)
+online$OperatingSystems = factor(online$OperatingSystems)
+online$Browser = factor(online$Browser)
+online$Region = factor(online$Region)
+online$TrafficType = factor(online$TrafficType)
 
 #split 70-30
 #want even amounts of YES/NO for Revenue
