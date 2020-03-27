@@ -1,0 +1,111 @@
+---
+title: "Tree Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r, warning=FALSE}
+#load data
+library(readr)
+online <- read_csv("C:/Users/amsha/OneDrive - Umich/Documents/Winter 2020/STATS 503/Project/online_shoppers_intention.csv")
+
+
+#factorize categorical
+online$Month = factor(online$Month)
+online$VisitorType = factor(online$VisitorType)
+online$Weekend = factor(online$Weekend)
+online$Revenue = factor(online$Revenue)
+
+#split 70-30
+#want even amounts of YES/NO for Revenue
+revenue_yes = which(online$Revenue == 'TRUE')
+revenue_no = which(online$Revenue == 'FALSE')
+set.seed(630)
+
+train_id = c(sample(revenue_yes, size = trunc(0.7 * length(revenue_yes))), sample(revenue_no, size = trunc(0.7 * length(revenue_no))))
+training = online[train_id, ]
+testing = online[-train_id, ]
+
+
+```
+
+We will start with an unconstrained tree, just to get a base line for the training and testing errors
+```{r}
+
+
+#Unconstrained Tree
+library(rpart)
+library(rpart.plot)  
+library(rattle)
+tree1 = rpart(Revenue ~ ., training, parms = list(split = "gini"), method = "class", cp = 0)
+fancyRpartPlot(tree1)
+
+#Errors
+tree1_pred_training = predict(tree1, newdata =  training, type = "class")
+tree1_training_err = mean(tree1_pred_training != training$Revenue)
+tree1_pred_testing = predict(tree1, newdata =  testing, type = "class")
+tree1_testing_err = mean(tree1_pred_testing != testing$Revenue)
+cat("Training Error is ", tree1_training_err, ". Testing Error is ", tree1_testing_err)
+
+
+```
+Now, we will use cross validation to find the tuning parameter cp. Below is the graph showing risk verses cp values
+```{r}
+
+
+#Find best cp
+tree.gini = rpart(Revenue ~ ., data = training, parms = list(split = "gini"), method = "class")
+plotcp(tree.gini)
+
+```
+Now, we create a tree with the cp value chosen by cross validation
+```{r}
+
+
+#Tree with best cp
+tree.gini3 = rpart(Revenue ~ ., training, parms = list(split = "gini"), method = "class", cp = 0.027)
+fancyRpartPlot(tree.gini3, cex = 0.95)
+
+#Errors
+tree3_pred_training = predict(tree.gini3, newdata =  training, type = "class")
+tree3_training_err = mean(tree3_pred_training != training$Revenue)
+tree3_pred_testing = predict(tree.gini3, newdata =  testing, type = "class")
+tree3_testing_err = mean(tree3_pred_testing != testing$Revenue)
+cat("Training Error is ", tree3_training_err, ". Testing Error is ", tree3_testing_err)
+
+```
+We can see a slight improvement in testing error with this simpler model. We look at an importance plot for this model below
+```{r}
+
+
+#importance plot
+library(vip)
+vip(tree.gini3, bar = FALSE)
+
+
+```
+Now we try random forest
+```{r}
+
+#random forest
+library(randomForest)
+rf_Revenue = randomForest(Revenue ~ ., data = training, mtry = floor(sqrt(17)), importance = TRUE)
+rf_Revenue
+
+importance(rf_Revenue)
+varImpPlot(rf_Revenue)
+
+#Errors
+rf_Revenue_pred_training = predict(rf_Revenue, newdata =  training, type = "class")
+rf_Revenue_training_err = mean(rf_Revenue_pred_training != training$Revenue)
+rf_Revenue_pred_testing = predict(rf_Revenue, newdata =  testing, type = "class")
+rf_Revenue_testing_err = mean(rf_Revenue_pred_testing != testing$Revenue)
+cat("Training Error is ", rf_Revenue_training_err, ". Testing Error is ", rf_Revenue_testing_err)
+
+```
+
+We can see a good improvement in testing error. 
